@@ -1,0 +1,250 @@
+
+
+import pickle
+import sys
+from numpy import *
+from pygame.locals import *
+from pygame.color import *
+import pickle
+from numpy import *
+class esfera:
+    def __init__(self,massa,raio,index,l,alpha,lamb,b,theta):
+        self.massa = massa
+        self.raio = raio
+        self.index = index
+        self.l = l
+        self.alpha = alpha
+        self.lamb = lamb
+        self.b = b
+        self.vx = 0
+        self.vy = 0
+        self.x = l*sin(theta)
+        self.y = -l*cos(theta)
+        self.theta = theta
+        self.thetaponto = 0
+        self.extended = True
+    def correctx(self,additional):
+        self.x += additional
+    def thetadoispontos(self,theta,thetaponto):
+        u1 = (2*self.lamb*(self.l**3))/(3*cos(self.alpha))
+        u2 = (2/5)*self.massa*(self.raio**2)
+        u3 = self.massa*(self.l+self.raio)**2
+        s1 = -self.massa*g*sin(theta)*(self.l+self.raio)
+        s2 = self.b*(thetaponto**2)*((self.l+self.raio)**3)
+        s3 = -self.lamb*g*(self.l**2)*(sin(theta)/cos(self.alpha))
+        tdp = (s1+s2+s3)/(u1+u2+u3)
+        return tdp
+class cradle:
+    def __init__(self,esferas,coeficientes):
+        self.esferas = esferas
+        self.tamanho = len(esferas)
+        self.coeficientes = coeficientes
+        self.historico = [[False for b in range(self.tamanho)]for a in range(self.tamanho)]
+        self.positions = []
+        self.contactlim = 0.00001
+        for indice,esfera in enumerate(self.esferas):
+            if indice == 0:
+                self.positions.append(0)
+            else:
+                self.positions.append(self.esferas[indice-1].raio+self.esferas[indice].raio+self.positions[-1])
+        for esfera in self.esferas:
+            esfera.correctx(self.positions[esfera.index])
+        #print([esfera.x for esfera in esferas])
+        #print([esfera.y for esfera in esferas])
+    def shouldcollide(self,esfera1,esfera2,dt):
+        #funcao que checa se devemos colidar a esfera1 e a 2 nesse round
+        if esfera1.index == esfera2.index:
+            return False
+        else:
+            distance = sqrt((esfera1.x - esfera2.x)**2 +(esfera1.y-esfera2.y)**2)
+            ddistance = sqrt(((esfera1.x + esfera1.vx*dt) -  (esfera2.x +esfera2.vx*dt))**2+ ((esfera1.y + esfera1.vy*dt) -  (esfera2.y +esfera2.vy*dt))**2)
+            if ddistance - distance < 0 and distance + self.contactlim <= esfera1.raio + esfera2.raio:
+                print("colisao")
+                return True
+            else:
+                return False
+    def collision(self,esfera1,esfera2):
+        cr = self.coeficientes[esfera1.index][esfera2.index]
+        #v1x = esfera1.thetaponto*esfera1.l*cos(esfera1.theta)
+        #v1y = esfera1.thetaponto*esfera1.l*sin(esfera1.theta)
+        #v2x = esfera2.thetaponto*esfera2.l*cos(esfera2.theta)
+        #v2y = esfera2.thetaponto*esfera2.l*sin(esfera2.theta)
+        v1x = esfera1.vx
+        v1y = esfera1.vy
+        v2x = esfera2.vx
+        v2y = esfera2.vy
+        esf1x,esf1y = self.positions[esfera1.index] + esfera1.l*sin(esfera1.theta), -esfera1.l*cos(esfera1.theta)
+        esf2x,esf2y = self.positions[esfera2.index] + esfera2.l*sin(esfera2.theta), -esfera2.l*cos(esfera2.theta)
+        newangle = arctan2(esf2y-esf1y,esf2x-esf1x)
+        v1ort = v1x*cos(newangle+(pi/2))+v1y*cos(newangle+(pi))
+        v2ort = v2x*cos(newangle+(pi/2))+v2y*cos(newangle+(pi))
+        v10 = v1x*cos(newangle)+v1y*cos(newangle+(pi/2))
+        v20 = v2x*cos(newangle)+v2y*cos(newangle+(pi/2))
+        v1f = (cr*esfera2.massa*(v20-v10)+esfera1.massa*v10+esfera2.massa*v20)/(esfera1.massa+esfera2.massa)
+        v2f = (cr*esfera1.massa*(v10-v20)+esfera1.massa*v10+esfera2.massa*v20)/(esfera1.massa+esfera2.massa)
+        v1xf = v1f*cos(newangle) + v1ort*cos(newangle + (pi/2))
+        v1yf = v1f*sin(newangle)+v1ort*sin(newangle+(pi/2))
+        v2xf = v2f*cos(newangle) + v2ort*cos(newangle + (pi/2))
+        v2yf = v2f*sin(newangle)+v2ort*sin(newangle+(pi/2))
+        self.historico[esfera1.index][esfera2.index] = True
+        self.historico[esfera2.index][esfera1.index] = True
+        return [[v1xf,v1yf],[v2xf,v2yf]]
+    def getfromindex(self,indice):
+        for esfera in self.esferas:
+            if esfera.index == indice:
+                return esfera
+        return None
+    def isextended(self,esfera):
+        #DECIDIR SE ESTA EXTENDIDO
+        dist = sqrt((esfera.x - self.positions[esfera.index])**2 + (esfera.y)**2) - esfera.l
+        if dist >= 0:
+            return True
+        else:
+            #print(dist)
+            return False
+    def correcexteneded(self,esfera):
+        xo = self.positions[esfera.index]
+        angletheta = (pi/2) + arctan2(esfera.y,esfera.x-xo)
+        newx = xo + esfera.l*sin(angletheta)
+        newy = -esfera.l*cos(angletheta)
+        print(esfera.x,esfera.y,newx,newy)
+        esfera.x = newx
+        esfera.y = newy
+    def passonatural(self,esfera):
+        #PARTE: MOVIMENTAR A ESFERA
+        #caso1: bola solta
+        if not esfera.extended:
+            newvx = esfera.vx
+            newvy = esfera.vy - g*dt
+            newtheta = esfera.theta
+            newthetaponto = esfera.thetaponto
+        else:
+            newtheta = esfera.theta
+            newthetaponto = esfera.thetaponto + esfera.thetadoispontos(esfera.theta,esfera.thetaponto)*dt
+            newvx = newthetaponto*esfera.l*cos(newtheta)
+            newvy = newthetaponto*esfera.l*sin(newtheta)
+        esfera.vx,esfera.vy = newvx,newvy
+        #print(esfera.vx)
+        return [newvx,newvy,newthetaponto]
+    def checkinclusion(self,a,b,matrix):
+        if matrix[a.index][b.index] is True or matrix[b.index][a.index] is True:
+            return True
+        else:
+            return False
+    def collisionmanager(self,esferabase,historico):
+        colisoes = [esfera2 for esfera2 in self.esferas if self.shouldcollide(esferabase,esfera2,dt) and not self.checkinclusion(esferabase,esfera2,historico)]
+        if len(colisoes) == 0:
+            return []
+        else:
+            parts = []
+            for target in colisoes:
+                target = colisoes[0]
+                newpartzero = self.collision(esferabase,target)
+                newpart = [esferabase.index,target.index]
+                esferabase.vx += newpartzero[0][0]
+                esferabase.vy += newpartzero[0][1]
+                target.vx += newpartzero[1][0]
+                target.vy += newpartzero[1][1]
+                parts += newpart
+                parts += self.collisionmanager(target, historico)
+            return parts
+    def passocolidir(self):
+        #Resolve todas as colisoes
+        for esfera in self.esferas:
+            self.historico = [[False for b in range(self.tamanho)]for a in range(self.tamanho)]
+            self.collisionmanager(esfera,self.historico)
+    def passofinal(self):
+        for esfera in self.esferas:
+            if self.isextended(esfera):
+                esfera.extended = True
+                self.correcexteneded(esfera)
+                newvx,newvy = esfera.vx,esfera.vy
+                newtheta = esfera.theta
+                vr = newvx*cos((pi/2) - newtheta) + newvy*cos(pi-newtheta)
+                vt = newvx*cos(newtheta) + newvy*sin(newtheta)
+                newthetaponto = vt/esfera.l
+                #print(newthetaponto,[self.isextended(i) for i in self.esferas])
+                newvx = newthetaponto*esfera.l*cos(newtheta)
+                newvy = newthetaponto*esfera.l*sin(newtheta)
+                esfera.vx = newvx
+                esfera.vy = newvy
+                esfera.thetaponto = newthetaponto
+                #print(esfera.index,esfera.thetaponto,esfera.x,esfera.y)
+                esfera.theta += esfera.thetaponto * dt
+                esfera.x += esfera.thetaponto*esfera.l*cos(esfera.theta)
+                esfera.y += esfera.thetaponto*esfera.l*sin(esfera.theta)
+            else:
+                esfera.extended = False
+                #print(esfera.index,esfera.x,esfera.y)
+                esfera.x += esfera.vx*dt
+                esfera.y += esfera.vy*dt
+    def passo(self):
+        for esfera in self.esferas:
+            self.passonatural(esfera)
+        #print("f1")
+        self.passocolidir()
+        self.passofinal()
+        #print([(esfera.x,esfera.y) for esfera in self.esferas])
+        #print("f2")
+
+def format_config_line(c):
+    c1 = c.replace(" ","").replace("[","").replace("]","")
+    if "#" in c1:
+        c2 = None
+    elif "id" in c1:
+        c2 = c1.split("=")[1]
+    elif "=" in c1:
+        c2 = [float(i) for i in c1.split("=")[1].split(",")]
+        if len(c2) == 1:
+            c2 = c2[0]
+    else:
+        c2 = [float(i) for i in c1.split(",")]
+    return c2
+if __name__ == "__main__":
+    import copy
+    import time as timehandler
+    t = timehandler.localtime()
+    h = t.tm_hour
+    m = t.tm_min
+    s = t.tm_sec
+    print(str(h) + ":" + str(m)+":"+str(s))
+    print("Abrindo arquivo de configuracao")
+    configfilename = sys.argv[1]
+    saveafter = sys.argv[2] == "t"
+    configfile = open(configfilename,"r").readlines()
+    configs = [format_config_line(i.replace("\n","")) for i in configfile]
+    configs = [i for i in configs if i != None]
+    identidade,dt,t,tmax,n,massas,raios, alphas = configs[0:8]
+    n = int(n)
+    crs = [configs[i] for i in range(8,8+n)]
+    ls,cs,P,T,Re,g,lamb,thetas = configs[8+n::]
+    #saida de dados:
+    saidanome = identidade+"-"+str(h)+"-"+str(m)+"-"+str(s)+"-ncs.iypt"
+    ro = P/(Re*T)
+    #coeficiente aerodinamico b de cada uma das n esferas
+    bs = [ro*i for i in cs]
+    print("Arquivo de configuracao carregado com sucesso")
+    print("Criando as esferas")
+    esferagen = []
+    for i in range(n):
+        esf = esfera(massas[i],raios[i],i,ls[i],alphas[i],lamb,bs[i],thetas[i])
+        esferagen.append(esf)
+    print("Esferas criadas com sucesso")
+    print("Criando Pêndulo")
+    pendulo = cradle(esferagen,crs)
+    print("Pêndulo Criado com Sucesso")
+    print("Iniciando a simulação")
+    data = []
+    while t <= tmax:
+        pendulo.passo()
+        print(str(t)+" | "+str(pendulo.esferas[-1].x) + "\r",end="")
+        data.append([t,copy.deepcopy(pendulo)])
+        if not saveafter:
+            pickle.dump(data,open(saidanome,"wb"))
+        t+= dt
+    if saveafter:
+        pickle.dump(data,open(saidanome,"wb"))
+    print(str(h) + ":" + str(m)+":"+str(s))
+    print("Simulação Completa")
+
+#Creditos especiais a meu estimado amigo Victor Cortez

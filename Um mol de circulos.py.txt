@@ -1,0 +1,46 @@
+import pygame
+import random
+
+background_colour = (255,255,255)
+(width, height) = (720, 576)
+
+class Particle:
+    def __init__(self, position, size):
+        self.x, self.y = position
+        self.size = size
+        self.colour = (255, 0, 0)
+        self.thickness = 1
+
+    def display(self):
+        pygame.draw.circle(screen, self.colour, (self.x, self.y), self.size, self.thickness)
+
+screen = pygame.display.set_mode((width, height))
+pygame.display.set_caption('Fisica é divertido')
+screen.fill(background_colour)
+
+number_of_particles = 12
+my_particles = []
+
+for n in range(number_of_particles):
+  size = random.randint(10, 70)
+  x = random.randint(size, width-size)
+  y = random.randint(size, width-size)
+  my_particles.append(Particle((x,y),size) )
+
+#my_particle.display()
+
+for particle in my_particles:
+  particle.display()
+
+
+#my_first_particle = Particle((200, 200), 100)
+#my_first_particle.display()
+
+pygame.display.flip()
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+pygame.quit()

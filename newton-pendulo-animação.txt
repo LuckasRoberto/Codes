@@ -1,0 +1,94 @@
+import pygame
+import pickle
+import sys
+from numpy import *
+from pygame.locals import *
+from pygame.color import *
+from newtonsim import *
+import os
+import picklexandria
+#Programa para animar os dados da resolucao numerica do looping pendulum
+#Newton Animation 1.1.0
+#04/03/2019
+entradanome = sys.argv[1] #recebe o nome da pasta que contem os arquivos
+shouldrender = sys.argv[2] == "r" #ve se deve renderizar o video
+os.chdir(entradanome)
+samplefile = open(os.listdir()[0],"rb")
+sampledata = pickle.load(samplefile)
+samplefile.close()
+os.chdir("..")
+dt = sampledata[1][0]-sampledata[0][0] #calcula o dt utilizado
+sampledata = []
+framerate = 30 #definicao do framerate da animacao
+velocidade = 0.05 #a razao entre o tempo real e o tempo na animacao
+frequencia = velocidade/framerate #quantos segundos reais por frame
+newdados = []#coloca na memoria apenas os frames a serem renderizados
+for dado in picklexandria.loadall(entradanome):
+    if len(newdados) != 0:
+        if dado[0] - newdados[-1][0] >= frequencia:
+            newdados.append(dado)
+    else:
+        newdados.append(dado)
+quant = round(frequencia/dt,0) #quantidade de frames
+pygame.init() #inicializa o pygame
+screen = pygame.display.set_mode((1400, 800)) #tamanho da tela
+clock = pygame.time.Clock()
+running = True
+framecount = 0 #contagem de em qual frame a animacao se encontra
+limit = len(newdados) #limite de frames
+#Posicao do 0,0 na tela
+xo = 200
+yo = 100
+k = 2000 #escala entre pixel e metro (px/m)
+def numbering(x):
+    sx = str(x)
+    return "0"*(8-len(sx)) + sx
+if shouldrender:
+    import pathlib #modulo de criar a pasta
+    import os #modulo pra andar entre as pastas
+    import subprocess #modulo para rodar o ffmpeg pra ele renderizar o video
+    import shutil #modulo pra apagar a pasta
+    foldername = entradanome.replace(".iypt","-frames")
+    pathlib.Path(foldername).mkdir(parents=True, exist_ok=True) #cria o diretorio com o nome definido
+    os.chdir(foldername) #anda para ele
+def inteirar(x): #apenas uma funcao pra arredondar o numero
+    return int(round(x,0))
+def drawsphere(esfera,xo,yo,tela,posicao): #desenha a esfera na tela e tambem a corda que a prende
+    x = esfera.x
+    y = -esfera.y
+    px,py = k*(x)+xo,k*y+yo #converte as coordenadas pra pixel
+    rraio = k*esfera.raio
+    if esfera.extended:
+        cor = (0,0,0) #preto pra corda extendida
+    else:
+        cor = (255,0,0) #vermelho pra esfera livre
+    #print(px,py,esfera.extended)
+    pygame.draw.line(tela,cor,(xo+k*posicao,yo),(px,py)) #desenha a corda
+    pygame.draw.circle(tela,(0,0,0),(inteirar(px),inteirar(py)),inteirar(rraio)) #desenha a esfera
+while running:
+    #Codigo para encerrar caso se aperte o botao de fechar a tela
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            running = False
+    screen.fill((255,255,255)) #pinta o fundo branco
+    t,pendulo = newdados[framecount]
+    #desenhar o l, a barra fica em (xo,yo)
+    for esfera in pendulo.esferas: #desenha cada esfera
+        drawsphere(esfera,xo,yo,screen,pendulo.positions[esfera.index])
+    pygame.display.flip() #atualiza o frame
+    pygame.image.save(screen,"img"+numbering(framecount+1)+".jpg") #salva o frame na pasta com a numeracao certa
+    clock.tick(framerate) #mantem o programa no framerate correto
+    #print(framecount)
+    print(str(t)+"|"+str(framecount)+ "\r",end="")
+    framecount += 1
+    if framecount >= limit: #encerra se tiver chegado ao final
+        break
+print("Renderizacao finalizada")
+if shouldrender:
+    print("Iniciando compilacao em video")
+    argument = ["ffmpeg", "-framerate" ,str(framerate) ,"-i", "img%08d.jpg", "..\output-"+foldername+ ".mp4"] #Linha de comando do ffmpeg
+    subprocess.run(argument) #roda o ffmpeg
+    os.chdir("..") #volta pro diretorio padrao
+    shutil.rmtree(foldername, ignore_errors=True) #apaga a pasta temporaria
+    print("Video renderizado")
+print("Animacao finalizada")
