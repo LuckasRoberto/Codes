@@ -1,0 +1,59 @@
+print("ANO DE NASCIMENTO:")
+ANO = int(input())
+
+A = ANO - 1900
+
+B = int(A/4)
+
+print("N° DO MES DE NASCIMENTO:")
+
+M = int(input())
+if M == 1:
+    C = 0
+elif M == 2:
+    C = 3
+elif M == 3:
+    C = 3
+elif M == 4:
+    C = 6
+elif M == 5:
+    C = 1
+elif M == 6:
+    C = 4
+elif M == 7:
+    C = 6
+elif M == 8:
+    C = 2
+elif M == 9:
+    C = 5
+elif M == 10:
+    C = 0
+elif M == 11:
+    C = 3
+elif M == 12:
+    C = 5
+
+print("DIA DO MES DO NASCIMENTO:")
+DIA = int(input())
+D = DIA - 1
+
+#SOMA TOTAL
+S = A+B+C+D
+
+#SUCESSO
+R = S % 7
+
+if R == 0:
+    print('VOCE NASCEU EM UMA: Segunda-feira')
+elif R == 1:
+    print('VOCE NASCEU EM UMA: Terça-feira')
+elif R == 2:
+    print('VOCE NASCEU EM UMA: Quarta-feira')
+elif R == 3:
+    print('VOCE NASCEU EM UMA: Quinta-feira')
+elif R == 4:
+    print('VOCE NASCEU EM UMA: Sexta-feira')
+elif R == 5:
+    print('VOCE NASCEU EM UM: Sábado')
+elif R == 6:
+    print('VOCE NASCEU EM UM: Domingo')

@@ -1,0 +1,68 @@
+let time = 0;
+
+
+
+function setup() {
+  
+createCanvas(800, 800);
+
+}
+
+
+
+function draw(){
+  
+background(0);
+  
+translate(350, 275);
+  
+  
+let raio0 = 10;
+
+let raio1 = 75;
+  
+let raio2 = 100;
+  let raio3 = 125;
+  let raio4 = 140;
+  let raio5 = 160;
+  let raio6 = 180;
+  let raio7 = 250;
+  let raio8 = 275;
+  
+  stroke(255,255,0);
+  fill(255, 255, 0);
+  ellipse(1, 0, 30);
+  
+  stroke(255)
+  noFill();
+  
+  let x1 = raio1*cos(-1.5*time);
+  let y1 = raio1*sin(-1.5*time);
+  let x2 = raio2*cos(-1.3*time);
+  let y2 = raio2*sin(-1.3*time);
+  let x3 = raio3*cos(1.2*time);
+  let y3 = raio3*sin(1.2*time);
+  let x4 = raio4*cos(time);
+  let y4 = raio4*sin(time);
+  let x5 = raio5*cos(0.9*time);
+  let y5 = raio5*sin(0.9*time);
+  let x6 = raio6*cos(0.8*time);
+  let y6 = raio6*sin(0.8*time);
+  let x7 = raio7*cos(0.7*time);
+  let y7 = raio7*sin(0.7*time);
+  let x8 = raio8*cos(0.5*time);
+  let y8 = raio8*sin(0.5*time);
+  
+  fill(255)
+  ellipse(x1, y1, 5); 
+  ellipse(x2, y2, 7); 
+  ellipse(x3, y3, 8);
+  ellipse(x4, y4, 6); 
+  ellipse(x5, y5, 15);
+  ellipse(x6, y6, 13); 
+  ellipse(x7, y7, 10);
+  ellipse(x8, y8, 10); 
+  
+  time += 0.02
+}
+  
