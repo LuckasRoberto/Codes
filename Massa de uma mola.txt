@@ -1,0 +1,21 @@
+e = float(input())
+
+h = 100
+pi = 3.14159265
+
+r = 1.5
+r2 = r - e
+
+Ac1 = pi*r*r
+Ac2 = pi*r2*r2
+
+v1 = Ac1*h
+v2 = Ac2*h
+
+v = v1 - v2
+
+d = 7.86
+
+Massa = d*v
+
+print(Massa/1000)

@@ -1,0 +1,23 @@
+n = int(input())
+
+import math
+
+def fatorar(n):
+  if ( n == 0):
+    return None
+  elif(n==1):
+      return 1
+  else:
+      Fatores = []
+      for i in range(2,n):
+          while n % i == 0:
+              n = n/i
+              Fatores.append(i)
+      return Fatores
+
+f = fatorar(n)
+
+b = math.sqrt(n)
+
+print(f)
+print(b)
