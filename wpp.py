@@ -1,19 +1,39 @@
 from selenium import webdriver
 
 driver = webdriver.Chrome()
-driver.get('https://web.whatsapp.com/')
+driver.get("https://web.whatsapp.com/")
 
-name = input('nome:')
-msg = input('menssagem:')
-count = int(input('número:'))
+#name = input('name: ')
+msg = str(input('mensagem:'))
+qnt = int(input('quantidade:'))
 
-input('qlqr coisa dps do qr code:')
+lista_de_nomes = ['marcus']
+lista_de_numeros = [558597913114, 558587386486]
 
-user = driver.find_element_by_xpath('//spam[@title = "{}"]'.format(davi))
-user.click()
+def spam_por_nome(msg):
+    user = driver.find_element_by_xpath('//span[@title = "{}"]'.format(name))
+    user.click()
 
-msg_box = driver.find_element_by_class_name('input-container')
+    txt_box = driver.find_element_by_xpath('/html/body/div/div/div/div[4]/div/footer/div[1]/div[2]/div/div[2]')
 
-for i in range(count):
-	msg_box.send_keys(msg)
-	button = driver.find_element_by_class_name('compose-btn-send')
+    for i in range(qnt):
+        txt_box.send_keys(msg)
+        b = driver.find_element_by_xpath('/html/body/div/div/div/div[4]/div/footer/div[1]/div[3]/button')
+        b.click()
+
+
+def spam_por_numero(phone_no, msg):
+     user2 = driver.get("https://web.whatsapp.com/send?phone={}&source=&data=#".format(phone_no))
+     user2.click()
+
+
+     txt_box = driver.find_element_by_xpath('/html/body/div/div/div/div[4]/div/footer/div[1]/div[2]/div/div[2]')
+
+
+     for i in range(qnt):
+      txt_box.send_keys(msg)
+      b = driver.find_element_by_xpath('/html/body/div/div/div/div[4]/div/footer/div[1]/div[3]/button')
+      b.click()
+
+for name in lista_de_nomes:
+    spam_por_nome(msg)
